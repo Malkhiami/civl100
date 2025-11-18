@@ -377,7 +377,7 @@
     </div>
 
 <script>
-    // 👉 PUT YOUR WEB APP URL HERE
+    // 👉 Your Google Apps Script Web App URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjP6WymcUtJSyeXoB03ArieXLYZFukH8fJ6HoHUyYEt21cgIF3Pt2RQc5_au_VNyVH/exec";
 
     const MAX_PER_SESSION = 30;
@@ -396,6 +396,13 @@
         Session2: 0,
         Session3: 0
     };
+
+    // 🧹 Allow only digits in Student ID as the user types
+    const studentIdInput = document.getElementById('studentId');
+    studentIdInput.addEventListener('input', function () {
+        // Remove any non-digit characters
+        this.value = this.value.replace(/\D/g, '');
+    });
 
     // Load data from Google Sheets (GET)
     async function fetchData() {
@@ -492,21 +499,30 @@
             showMsg('Please enter your name', 'error');
             return;
         }
+
         if (!studentId) {
             showMsg('Please enter your Student ID', 'error');
             return;
         }
+
+        // ✅ Numbers-only check for Student ID
+        if (!/^\d+$/.test(studentId)) {
+            showMsg('Student ID must contain numbers only.', 'error');
+            return;
+        }
+
         if (!session) {
             showMsg('Please select a session', 'error');
             return;
         }
 
-        // Refresh from Google Sheets to avoid stale counts
+        // Refresh from Google Sheets to avoid stale data (latest counts + list)
         await fetchData();
 
-        // Check duplicate student ID
-        if (registrations.some(r => r.studentId === studentId)) {
-            showMsg('This Student ID is already registered!', 'error');
+        // ✅ Strong duplicate check (trimmed)
+        const exists = registrations.some(r => (r.studentId || '').trim() === studentId.trim());
+        if (exists) {
+            showMsg('❌ This Student ID is already registered!', 'error');
             return;
         }
 
@@ -547,20 +563,21 @@
         }
     });
 
-    // Admin buttons (simplified for Google Sheets backend)
+    // Admin buttons
 
-    // Export button – tell you to export directly from Google Sheets
+    // Export button – instructions to export from Google Sheets
     document.getElementById('exportBtn').addEventListener('click', function () {
         alert('All registrations are stored in your Google Sheet.\n\nTo export, open the Sheet and use:\nFile → Download → Comma Separated Values (.csv)');
     });
 
-    // Reset button – tell you to clear the sheet directly
+    // Reset button – instructions to clear sheet
     document.getElementById('resetBtn').addEventListener('click', function () {
         alert('To reset all registrations, open the Google Sheet and delete the data rows (keep the header row).');
     });
 
     // Load data when the page first opens
     fetchData();
-</script>   
-</body>
+</script>
+
+   </body>
 </html>
