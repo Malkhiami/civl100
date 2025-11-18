@@ -518,14 +518,13 @@
 
         // Refresh from Google Sheets to avoid stale data (latest counts + list)
         await fetchData();
-
-        // ✅ Strong duplicate check (trimmed)
-        const exists = registrations.some(r => (r.studentId || '').trim() === studentId.trim());
+        
+        // ✅ Strong duplicate check (handles numbers, blank cells, undefined)
+        const exists = registrations.some(r => String(r.studentId || '').trim() === studentId.trim());
         if (exists) {
             showMsg('❌ This Student ID is already registered!', 'error');
             return;
         }
-
         // Check seat limit for this session
         if ((counts[session] || 0) >= MAX_PER_SESSION) {
             showMsg('This session is full! Please choose another.', 'error');
